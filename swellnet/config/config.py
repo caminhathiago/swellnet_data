@@ -1,0 +1,1 @@
+IMAGE_KEY_PATTERN = "{prefix}/{station}/{station}_{year}-{month}-{day}_{hour}-{minute}-{second}_{timezone}.jpg"
