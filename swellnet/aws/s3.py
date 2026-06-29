@@ -106,7 +106,6 @@ def list_incremental(
 
             key = obj["Key"]
             last_modified = obj["LastModified"]
-            print(os.path.basename(key))
             if cutoff_enabled and last_modified < cutoff:
                 continue
 
