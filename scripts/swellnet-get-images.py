@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
             s3 = session.client("s3")
 
-            SITE_LOGGER.info(f"Fetching images from last {vargs.window} minutes")
+            SITE_LOGGER.info(f"Backfill is set to {vargs.backfill}. Fetching images from last {vargs.window} minutes if backfill is set to 'disabled'.")
             results = list_incremental(
                 BUCKET_NAME, 
                 PREFIX, 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
             keys = [r["Key"] for r in results]
             SITE_LOGGER.info(
-                "Downloading images (preview):\n%s",
+                f"Downloading {len(keys)} images (preview):\n%s",
                 "\n".join(imos_logging.preview_list(keys)),
             )
 
