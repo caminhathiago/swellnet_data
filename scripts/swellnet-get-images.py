@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timedelta, UTC
 
-import pytz
 import boto3
 import pandas as pd
 from dotenv import load_dotenv
@@ -70,12 +69,17 @@ if __name__ == "__main__":
                 results= filter_new_results(results, STATION, INCOMING_PATH)
 
             if not results:
-                SITE_LOGGER.info("No new data since last execution")
+                SITE_LOGGER.info("No new images since last execution")
                 imos_logging.logging_stop(logger=SITE_LOGGER)
                 continue            
 
             SITE_LOGGER.info("Filtering daytime images based on datetime and location")
             results = filter_daytime_images(results, -31.88979, 115.75320, 'Australia/Perth')
+
+            if not results:
+                SITE_LOGGER.info("No daytime images to be donwloaded.")
+                imos_logging.logging_stop(logger=SITE_LOGGER)
+                continue    
 
             keys = [r["Key"] for r in results]
             SITE_LOGGER.info(
@@ -83,6 +87,7 @@ if __name__ == "__main__":
                 "\n".join(imos_logging.preview_list(keys)),
             )
 
+            
             download_s3_results(
                 results,
                 BUCKET_NAME,
