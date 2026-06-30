@@ -1,5 +1,6 @@
 import os
-from datetime import datetime, timedelta, UTC
+import re
+from datetime import datetime, time, timedelta, UTC
 
 from swellnet.aws.checkpoint import load_checkpoint, save_checkpoint, create_new_station
 # from swellnet.config.config import CHECKPOINT_FILE
@@ -135,6 +136,70 @@ def filter_new_results(results, station, incoming_path):
             new_results.append(obj)
 
     return new_results
+
+def generate_timezone_converter(tz_name):
+    import zoneinfo
+    return zoneinfo.ZoneInfo(tz_name)
+
+# def get_sunrise_sunset(latitude, longitude, tz, target_datetime):
+
+#     from suntime import Sun
+#     sun = Sun(latitude, longitude)
+
+#     local_date = target_datetime.date()
+
+#     # IMPORTANT: anchor in UTC, NOT local time
+#     anchor = datetime.combine(local_date, time(12, 0))
+
+#     sunrise_utc = sun.get_sunrise_time(anchor)
+#     sunset_utc = sun.get_sunset_time(anchor)
+
+#     sunrise_local = sunrise_utc.astimezone(tz)
+#     sunset_local = sunset_utc.astimezone(tz)
+
+#     return sunrise_local, sunset_local
+
+def get_sunrise_sunset(latitude, longitude, tz, target_datetime):
+
+    from astral import LocationInfo
+    from astral.sun import sun
+
+    location = LocationInfo(latitude=latitude, longitude=longitude, timezone=str(tz))
+
+    s = sun(location.observer, date=target_datetime.date(), tzinfo=tz)
+
+    return s["sunrise"], s["sunset"]
+
+def filter_daytime_images(results, latitude, longitude, tz):
+
+    tz = generate_timezone_converter(tz)
+
+    pattern = r"_(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})"
+
+    daytime_results = []
+
+    for result in results:
+
+        match = re.search(pattern, result["Key"])
+        if not match:
+            continue
+
+        year, month, day, hour, minute = map(int, match.groups())
+
+        key_dt = datetime(year, month, day, hour, minute, tzinfo=tz)
+
+        sunrise, sunset = get_sunrise_sunset(
+            latitude,
+            longitude,
+            tz,
+            key_dt
+        )
+
+        if sunrise <= key_dt <= sunset:
+            daytime_results.append(result)
+
+    return daytime_results
+
 
 def process_local_path(key, station, incoming_path):
 
