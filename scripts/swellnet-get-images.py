@@ -74,6 +74,9 @@ if __name__ == "__main__":
                 imos_logging.logging_stop(logger=SITE_LOGGER)
                 continue            
 
+            SITE_LOGGER.info("Filtering daytime images based on datetime and location")
+            results = filter_daytime_images(results, -31.88979, 115.75320, 'Australia/Perth')
+
             keys = [r["Key"] for r in results]
             SITE_LOGGER.info(
                 f"Downloading {len(keys)} images (preview):\n%s",
